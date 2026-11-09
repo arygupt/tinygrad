@@ -700,6 +700,13 @@ class TestOps(TensorTestCase):
     # is_odd truncates, so it calls 3.3 odd: only the non_int guard keeps pow(-inf, 3.3) from negating to -inf
     helper_test_op(None, lambda x: x**3.3, vals=[[-math.inf]])
 
+  def test_pow_non_finite_exponent(self):
+    # inf is an even integer exponent, so a negative base is never nan. 1 ** x is 1, even for a nan exponent
+    base = [-math.inf, -2., -1., -0.5, 0., 0.5, 1., 2., math.inf, math.nan]
+    for c in [math.inf, -math.inf, math.nan]:
+      helper_test_op(None, lambda x: x**c, vals=[base], forward_only=True)
+      helper_test_op(None, lambda x,y: x**y, vals=[base, [c]*len(base)], forward_only=True)
+
   def test_pow_zero_exponent(self):
     # x ** 0 is the constant 1 for every x, so the gradient with respect to the base is 0, never nan
     # TODO: nan ** 0, failed on WEBGPU
